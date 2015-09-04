@@ -1,0 +1,13 @@
+[package]
+name = "bellhop"
+version = "0.1.0"
+authors = ["softprops <d.tangren@gmail.com>"]
+description = "Rust interface for Github"
+homepage = "https://github.com/softprops/hubcaps"
+repository = "https://github.com/softprops/hubcaps"
+keywords = ["hyper", "jenkins"]
+license = "MIT"
+
+[dependencies]
+hyper = "0.6"
+rustc-serialize = "0.3"
