@@ -61,6 +61,7 @@ impl<'a> JobRef<'a> {
     Ok(json::decode::<BuildInfo>(&body).unwrap())
   }
 
+  /// Enqueue a new build and return its associated queue url
   pub fn build(&self, params: Option<HashMap<&'static str, &'static str>>) -> Result<String> {
     let uri = match params {
       Some(args) => {
