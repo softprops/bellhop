@@ -2,7 +2,8 @@
 
 #[derive(Debug, RustcEncodable, RustcDecodable)]
 pub struct Parameter {
-  pub name: String
+  pub name: String,
+  pub value: String
 }
 
 #[derive(Debug, RustcEncodable, RustcDecodable)]
@@ -53,7 +54,19 @@ pub struct Jobs {
 }
 
 #[derive(Debug, RustcEncodable, RustcDecodable)]
+pub struct Cause {
+  pub shortDescription: String
+}
+
+#[derive(Debug, RustcEncodable, RustcDecodable)]
+pub struct Action {
+  pub parameters: Option<Vec<Parameter>>,
+  pub causes: Option<Vec<Cause>>
+}
+
+#[derive(Debug, RustcEncodable, RustcDecodable)]
 pub struct BuildInfo {
+  pub actions: Vec<Action>,
   pub building: bool,
   pub description: String,
   pub displayName: String,
