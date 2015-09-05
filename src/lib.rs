@@ -3,86 +3,18 @@
 extern crate hyper;
 extern crate rustc_serialize;
 
-use std::collections::HashMap;
 use hyper::Client;
 use hyper::client::{IntoUrl, RequestBuilder};
 use hyper::method::Method;
 use hyper::header::{Authorization, UserAgent};
-use std::fmt;
 use std::io::{Read, Result};
-use rustc_serialize::json;
-use rep::{ Job, Jobs, JobInfo };
 
+pub mod jobs;
 pub mod rep;
 
+use jobs::{JobRef, JobsRef};
+
 const AGENT: &'static str = "bellhop/0.1.0";
-
-
-pub struct JobRef<'a> {
-  jenkins: &'a Jenkins<'a>,
-  name: &'static str
-}
-
-impl<'a> JobRef<'a> {
-  pub fn info(&self) -> Result<JobInfo> {
-    let body = try!(
-      self.jenkins.get(
-        &format!("/job/{}/api/json", self.name)
-      )
-    );
-    Ok(json::decode::<JobInfo>(&body).unwrap())
-  }
-
-  pub fn stop(&self, build: i64) -> Result<()> {
-    let path = format!("/job/{}/{}/stop", self.name, build);
-    self.jenkins.post(
-      &path,
-      &vec![]
-    ).map(|_| ())
-  }
-
-  pub fn build(&self, params: Option<HashMap<&'static str, &'static str>>) -> Result<()> {
-    let uri = match params {
-      Some(args) => {
-        let path = format!(
-          "/job/{}/buildWithParameters", self.name
-        );
-        let mut query = vec![];
-        for (k, v) in args {
-          query.push(
-            vec![k, v].connect("=")
-          )
-        }
-        vec![
-          path,
-          query.connect("&")
-        ].connect("?")
-      },
-      _ => {
-        format!(
-          "/job/{}/build/api/json", self.name
-        )
-      }
-    };
-    self.jenkins.post(&uri, &vec![]).map(|_| ())
-  }
-}
-
-pub struct JobsRef<'a> {
-  jenkins: &'a Jenkins<'a>
-}
-
-impl<'a> JobsRef<'a> {
-  pub fn list(&self) -> Result<Vec<Job>> {
-    let body = try!(
-      self.jenkins.get(
-        "/api/json"
-      )
-    );
-    let parsed = json::decode::<Jobs>(&body).unwrap();
-    Ok(parsed.jobs)
-  }
-}
 
 pub struct Jenkins<'a> {
   host: &'static str,
@@ -102,15 +34,12 @@ impl<'a> Jenkins<'a> {
 
   /// Return a references to jobs
   pub fn jobs(&self) -> JobsRef {
-    JobsRef { jenkins: self }
+    JobsRef::new(self)
   }
 
   /// Return a reference to a named job
   pub fn job(&self, name: &'static str) -> JobRef {
-    JobRef {
-      jenkins: self,
-      name: name
-    }
+    JobRef::new(self, name)
   }
 
   fn post(&self, uri: &str, message: &[u8]) -> Result<String> {
