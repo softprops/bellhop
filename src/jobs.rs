@@ -1,7 +1,7 @@
 use super::Jenkins;
 use rustc_serialize::json;
 use std::collections::HashMap;
-use rep::{ Job, Jobs, JobInfo };
+use rep::{ BuildInfo, Job, Jobs, JobInfo };
 use std::io::{Read, Result};
 
 pub struct JobRef<'a> {
@@ -29,6 +29,43 @@ impl<'a> JobRef<'a> {
       &path,
       &vec![]
     ).map(|_| ())
+  }
+
+  pub fn disable(&self) -> Result<String> {
+    self.act("disable")
+  }
+
+  pub fn enable(&self) -> Result<String> {
+    self.act("enable")
+  }
+
+  fn act(&self, action: &'static str) -> Result<String> {
+    self.jenkins.post(
+      &format!("/job/{}/{}", self.name, action),
+      &vec![]
+    )
+  }
+
+  pub fn last(&self) -> Result<BuildInfo> {
+    let body = try!(
+      self.jenkins.get(
+        &format!(
+          "/job/{}/lastBuild/api/json", self.name
+        )
+      )
+    );
+    Ok(json::decode::<BuildInfo>(&body).unwrap())
+  }
+
+  pub fn last_completed(&self) -> Result<BuildInfo> {
+    let body = try!(
+      self.jenkins.get(
+        &format!(
+          "/job/{}/lastCompletedBuild/api/json", self.name
+        )
+      )
+    );
+    Ok(json::decode::<BuildInfo>(&body).unwrap())
   }
 
   pub fn build(&self, params: Option<HashMap<&'static str, &'static str>>) -> Result<()> {

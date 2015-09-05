@@ -51,3 +51,21 @@ pub struct Job {
 pub struct Jobs {
   pub jobs: Vec<Job>
 }
+
+#[derive(Debug, RustcEncodable, RustcDecodable)]
+pub struct BuildInfo {
+  pub building: bool,
+  pub description: String,
+  pub displayName: String,
+  pub duration: i64,
+  pub estimatedDuration: Option<i64>,
+  pub fullDisplayName: String,
+  pub id: String,
+  pub keepLog: bool,
+  pub number: i64,
+  pub queueId: i64,
+  pub result: String,
+  pub timestamp: i64,
+  pub url: String,
+  pub builtOn: Option<String>
+}
