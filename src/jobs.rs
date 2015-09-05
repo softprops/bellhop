@@ -61,7 +61,7 @@ impl<'a> JobRef<'a> {
     Ok(json::decode::<BuildInfo>(&body).unwrap())
   }
 
-  pub fn build(&self, params: Option<HashMap<&'static str, &'static str>>) -> Result<()> {
+  pub fn build(&self, params: Option<HashMap<&'static str, &'static str>>) -> Result<String> {
     let uri = match params {
       Some(args) => {
         let path = format!(
@@ -84,7 +84,7 @@ impl<'a> JobRef<'a> {
         )
       }
     };
-    self.jenkins.post(&uri, &vec![]).map(|_| ())
+    self.jenkins.post_location(&uri)
   }
 
   fn act(&self, action: &'static str) -> Result<String> {

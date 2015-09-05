@@ -4,7 +4,8 @@ extern crate hyper;
 extern crate rustc_serialize;
 
 use hyper::Client;
-use hyper::client::{IntoUrl, RequestBuilder};
+use hyper::client::{IntoUrl, RequestBuilder, Response};
+use hyper::header::Location;
 use hyper::method::Method;
 use hyper::header::{Authorization, UserAgent};
 use std::io::{Read, Result};
@@ -44,24 +45,50 @@ impl<'a> Jenkins<'a> {
 
   fn post(&self, uri: &str, message: &[u8]) -> Result<String> {
     let url = format!("{}{}", self.host, uri);
-    self.request(
-      self.client.get(
-        &url
-      ), Some(message)
-    )
+    let mut res = try!(
+      self.request(
+        self.client.get(
+          &url
+        ), Some(message)
+      )
+    );
+    let mut body = String::new();
+    res.read_to_string(&mut body).unwrap();
+    Ok(body)
   }
 
   fn get(&self, uri: &str) -> Result<String> {
     let url = format!("{}{}", self.host, uri);
-    self.request(
-      self.client.get(
-        &url
-      ), None
-    )
+    let mut res = try!(
+      self.request(
+        self.client.get(
+          &url
+        ), None
+      )
+    );
+    let mut body = String::new();
+    res.read_to_string(&mut body).unwrap();
+    Ok(body)
+  }
+
+  fn post_location(&self, uri: &str) -> Result<String> {
+    let url = format!("{}{}", self.host, uri);
+    let res = try!(
+      self.request(
+        self.client.post(
+          &url
+        ), None
+      )
+    );
+    if let Some(loc) = res.headers.get::<Location>() {
+      Ok(String::from_utf8_lossy(loc.as_bytes()).to_string())
+    } else {
+      Ok("".to_owned())
+    }
   }
 
   fn request<U: IntoUrl>(
-    &self, request_builder: RequestBuilder<'a, U>, body: Option<&'a [u8]>) -> Result<String> {
+    &self, request_builder: RequestBuilder<'a, U>, body: Option<&'a [u8]>) -> Result<Response> {
     let builder = request_builder.header(
       UserAgent(AGENT.to_owned())
     );
@@ -73,12 +100,10 @@ impl<'a> Jenkins<'a> {
       _ =>
         builder
     };
-    let mut res = match body {
+    let res = match body {
       Some(ref bod) => authenticated.body(*bod).send().unwrap(),
        _ => authenticated.send().unwrap()
     };
-    let mut body = String::new();
-    res.read_to_string(&mut body).unwrap();
-    Ok(body)
+    Ok(res)
   }
 }
