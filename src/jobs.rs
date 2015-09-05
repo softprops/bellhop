@@ -39,13 +39,6 @@ impl<'a> JobRef<'a> {
     self.act("enable")
   }
 
-  fn act(&self, action: &'static str) -> Result<String> {
-    self.jenkins.post(
-      &format!("/job/{}/{}", self.name, action),
-      &vec![]
-    )
-  }
-
   pub fn last(&self) -> Result<BuildInfo> {
     let body = try!(
       self.jenkins.get(
@@ -92,6 +85,13 @@ impl<'a> JobRef<'a> {
       }
     };
     self.jenkins.post(&uri, &vec![]).map(|_| ())
+  }
+
+  fn act(&self, action: &'static str) -> Result<String> {
+    self.jenkins.post(
+      &format!("/job/{}/{}", self.name, action),
+      &vec![]
+    )
   }
 }
 
