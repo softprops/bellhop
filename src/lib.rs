@@ -3,6 +3,7 @@
 extern crate hyper;
 extern crate rustc_serialize;
 
+use std::collections::HashMap;
 use hyper::Client;
 use hyper::client::{IntoUrl, RequestBuilder};
 use hyper::method::Method;
@@ -10,20 +11,11 @@ use hyper::header::{Authorization, UserAgent};
 use std::fmt;
 use std::io::{Read, Result};
 use rustc_serialize::json;
+use rep::{ Job, Jobs, JobInfo };
+
+pub mod rep;
 
 const AGENT: &'static str = "bellhop/0.1.0";
-
-#[derive(Debug, RustcEncodable, RustcDecodable)]
-pub struct Job {
-  pub name: String,
-  pub url: String,
-  pub color: String
-}
-
-#[derive(Debug, RustcEncodable, RustcDecodable)]
-pub struct Jobs {
-  jobs: Vec<Job>
-}
 
 pub struct Jenkins<'a> {
   host: &'static str,
@@ -40,6 +32,49 @@ impl<'a> Jenkins<'a> {
     }
   }
 
+  pub fn info(&self, job: &'static str) -> Result<JobInfo> {
+    let body = try!(
+      self.get(
+        &format!("/job/{}/api/json", job)
+      )
+    );
+    Ok(json::decode::<JobInfo>(&body).unwrap())
+  }
+
+  pub fn stop(&self, job: &'static str, build: i64) -> Result<()> {
+    let path = format!("/job/{}/{}/stop", job, build);
+    self.post(
+      &path,
+      &vec![]
+    ).map(|_| ())
+  }
+
+  pub fn build(&self, job: &'static str, params: Option<HashMap<&'static str, &'static str>>) -> Result<()> {
+    let uri = match params {
+      Some(args) => {
+        let path = format!(
+          "/job/{}/buildWithParameters", job
+        );
+        let mut query = vec![];
+        for (k, v) in args {
+          query.push(
+            vec![k, v].connect("=")
+          )
+        }
+        vec![
+          path,
+          query.connect("&")
+        ].connect("?")
+      },
+      _ => {
+        format!(
+          "/job/{}/build/api/json", job
+        )
+      }
+    };
+    self.post(&uri, &vec![]).map(|_| ())
+  }
+
   pub fn jobs(&self) -> Result<Vec<Job>> {
     let body = try!(
       self.get(
@@ -48,6 +83,15 @@ impl<'a> Jenkins<'a> {
     );
     let parsed = json::decode::<Jobs>(&body).unwrap();
     Ok(parsed.jobs)
+  }
+
+  fn post(&self, uri: &str, message: &[u8]) -> Result<String> {
+    let url = format!("{}{}", self.host, uri);
+    self.request(
+      self.client.get(
+        &url
+      ), Some(message)
+    )
   }
 
   fn get(&self, uri: &str) -> Result<String> {
