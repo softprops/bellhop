@@ -17,43 +17,35 @@ pub mod rep;
 
 const AGENT: &'static str = "bellhop/0.1.0";
 
-pub struct Jenkins<'a> {
-  host: &'static str,
-  client: &'a Client,
-  token: Option<&'static str>
+
+pub struct JobRef<'a> {
+  jenkins: &'a Jenkins<'a>,
+  name: &'static str
 }
 
-impl<'a> Jenkins<'a> {
-  pub fn new(host: &'static str, client: &'a Client, token: Option<&'static str>) -> Jenkins<'a> {
-    Jenkins {
-      host: host,
-      client: client,
-      token: token
-    }
-  }
-
-  pub fn info(&self, job: &'static str) -> Result<JobInfo> {
+impl<'a> JobRef<'a> {
+  pub fn info(&self) -> Result<JobInfo> {
     let body = try!(
-      self.get(
-        &format!("/job/{}/api/json", job)
+      self.jenkins.get(
+        &format!("/job/{}/api/json", self.name)
       )
     );
     Ok(json::decode::<JobInfo>(&body).unwrap())
   }
 
-  pub fn stop(&self, job: &'static str, build: i64) -> Result<()> {
-    let path = format!("/job/{}/{}/stop", job, build);
-    self.post(
+  pub fn stop(&self, build: i64) -> Result<()> {
+    let path = format!("/job/{}/{}/stop", self.name, build);
+    self.jenkins.post(
       &path,
       &vec![]
     ).map(|_| ())
   }
 
-  pub fn build(&self, job: &'static str, params: Option<HashMap<&'static str, &'static str>>) -> Result<()> {
+  pub fn build(&self, params: Option<HashMap<&'static str, &'static str>>) -> Result<()> {
     let uri = match params {
       Some(args) => {
         let path = format!(
-          "/job/{}/buildWithParameters", job
+          "/job/{}/buildWithParameters", self.name
         );
         let mut query = vec![];
         for (k, v) in args {
@@ -68,21 +60,57 @@ impl<'a> Jenkins<'a> {
       },
       _ => {
         format!(
-          "/job/{}/build/api/json", job
+          "/job/{}/build/api/json", self.name
         )
       }
     };
-    self.post(&uri, &vec![]).map(|_| ())
+    self.jenkins.post(&uri, &vec![]).map(|_| ())
   }
+}
 
-  pub fn jobs(&self) -> Result<Vec<Job>> {
+pub struct JobsRef<'a> {
+  jenkins: &'a Jenkins<'a>
+}
+
+impl<'a> JobsRef<'a> {
+  pub fn list(&self) -> Result<Vec<Job>> {
     let body = try!(
-      self.get(
+      self.jenkins.get(
         "/api/json"
       )
     );
     let parsed = json::decode::<Jobs>(&body).unwrap();
     Ok(parsed.jobs)
+  }
+}
+
+pub struct Jenkins<'a> {
+  host: &'static str,
+  client: &'a Client,
+  token: Option<&'static str>
+}
+
+impl<'a> Jenkins<'a> {
+  /// Create a new Jenkins client interface
+  pub fn new(host: &'static str, client: &'a Client, token: Option<&'static str>) -> Jenkins<'a> {
+    Jenkins {
+      host: host,
+      client: client,
+      token: token
+    }
+  }
+
+  /// Return a references to jobs
+  pub fn jobs(&self) -> JobsRef {
+    JobsRef { jenkins: self }
+  }
+
+  /// Return a reference to a named job
+  pub fn job(&self, name: &'static str) -> JobRef {
+    JobRef {
+      jenkins: self,
+      name: name
+    }
   }
 
   fn post(&self, uri: &str, message: &[u8]) -> Result<String> {

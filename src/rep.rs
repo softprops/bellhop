@@ -13,20 +13,30 @@ pub struct Build {
 
 #[derive(Debug, RustcEncodable, RustcDecodable)]
 pub struct JobInfo {
+  #[allow(non_snake_case)]
   pub displayName: String,
   pub name: String,
   pub url: String,
   pub buildable: bool,
   pub builds: Vec<Build>,
   pub color: String,
+  #[allow(non_snake_case)]
   pub firstBuild: Option<Build>,
+  #[allow(non_snake_case)]
   pub lastBuild: Option<Build>,
+  #[allow(non_snake_case)]
   pub lastCompletedBuild: Option<Build>,
+  #[allow(non_snake_case)]
   pub lastFailedBuild: Option<Build>,
+  #[allow(non_snake_case)]
   pub lastStableBuild: Option<Build>,
+  #[allow(non_snake_case)]
   pub lastSuccsesfulBuild: Option<Build>,
+  #[allow(non_snake_case)]
   pub lastUnstableBuild: Option<Build>,
+  #[allow(non_snake_case)]
   pub lastUnsuccessfulBuild: Option<Build>,
+  #[allow(non_snake_case)]
   pub nextBuildNumber: i64
 }
 
