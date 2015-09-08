@@ -1,0 +1,89 @@
+#[derive(Debug, Deserialize)]
+pub struct Parameter {
+  pub name: String,
+  pub value: String
+}
+
+#[derive(Debug, Deserialize)]
+pub struct Build {
+  pub number: i64,
+  pub url: String
+}
+
+#[derive(Debug, Deserialize)]
+pub struct JobInfo {
+  #[serde(rename(json="displayName"))]
+  pub display_name: String,
+  pub name: String,
+  pub url: String,
+  pub buildable: bool,
+  pub builds: Vec<Build>,
+  pub color: String,
+  #[serde(rename(json="firstBuild"))]
+  pub first_build: Option<Build>,
+  #[serde(rename(json="lastBuild"))]
+  pub last_build: Option<Build>,
+  #[serde(rename(json="lastCompletedBuild"))]
+  pub last_completed_build: Option<Build>,
+  #[serde(rename(json="lastFailedBuild"))]
+  pub last_failed_build: Option<Build>,
+  #[serde(rename(json="lastStableBuild"))]
+  pub last_stable_build: Option<Build>,
+  #[serde(rename(json="lastSuccessfulBuild"))]
+  pub last_succsessful_build: Option<Build>,
+  #[serde(rename(json="lastUnstableBuild"))]
+  pub last_unstable_build: Option<Build>,
+  #[serde(rename(json="lastUnsuccessfulBuild"))]
+  pub last_unsuccessful_build: Option<Build>,
+  #[serde(rename(json="nextBuildNumber"))]
+  pub next_build_number: i64
+}
+
+#[derive(Debug, Deserialize)]
+pub struct Job {
+  pub name: String,
+  pub url: String,
+  pub color: String
+}
+
+#[derive(Debug, Deserialize)]
+pub struct Jobs {
+  pub jobs: Vec<Job>
+}
+
+#[derive(Debug, Deserialize)]
+pub struct Cause {
+  #[serde(rename(json="shortDescription"))]
+  pub short_description: String
+}
+
+#[derive(Debug, Deserialize)]
+pub struct Action {
+  pub parameters: Option<Vec<Parameter>>,
+  pub causes: Option<Vec<Cause>>
+}
+
+#[derive(Debug, Deserialize)]
+pub struct BuildInfo {
+  pub actions: Vec<Action>,
+  pub building: bool,
+  pub description: String,
+  #[serde(rename(json="displayName"))]
+  pub display_name: String,
+  pub duration: i64,
+  #[serde(rename(json="estimatedDuration"))]
+  pub estimated_duration: Option<i64>,
+  #[serde(rename(json="fullDisplayName"))]
+  pub full_display_name: String,
+  pub id: String,
+  #[serde(rename(json="keepLog"))]
+  pub keep_log: bool,
+  pub number: i64,
+  #[serde(rename(json="queueId"))]
+  pub queue_id: i64,
+  pub result: String,
+  pub timestamp: i64,
+  pub url: String,
+  #[serde(rename(json="buildOn"))]
+  pub built_on: Option<String>
+}

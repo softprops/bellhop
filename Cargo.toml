@@ -8,6 +8,13 @@ repository = "https://github.com/softprops/hubcaps"
 keywords = ["hyper", "jenkins"]
 license = "MIT"
 
+build = "build.rs"
+
+[build-dependencies]
+serde_codegen = "*"
+syntex = "*"
+
 [dependencies]
 hyper = "0.6"
-rustc-serialize = "0.3"
+serde = "*"
+serde_json = "*"

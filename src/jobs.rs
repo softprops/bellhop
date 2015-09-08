@@ -1,8 +1,8 @@
 use super::Jenkins;
-use rustc_serialize::json;
 use std::collections::HashMap;
 use rep::{ BuildInfo, Job, Jobs, JobInfo };
-use std::io::{Read, Result};
+use std::io::Result;
+use serde_json;
 
 pub struct JobRef<'a> {
   jenkins: &'a Jenkins<'a>,
@@ -20,7 +20,7 @@ impl<'a> JobRef<'a> {
         &format!("/job/{}/api/json", self.name)
       )
     );
-    Ok(json::decode::<JobInfo>(&body).unwrap())
+    Ok(serde_json::from_str::<JobInfo>(&body).unwrap())
   }
 
   pub fn stop(&self, build: i64) -> Result<()> {
@@ -47,7 +47,7 @@ impl<'a> JobRef<'a> {
         )
       )
     );
-    Ok(json::decode::<BuildInfo>(&body).unwrap())
+    Ok(serde_json::from_str::<BuildInfo>(&body).unwrap())
   }
 
   pub fn last_completed(&self) -> Result<BuildInfo> {
@@ -58,7 +58,7 @@ impl<'a> JobRef<'a> {
         )
       )
     );
-    Ok(json::decode::<BuildInfo>(&body).unwrap())
+    Ok(serde_json::from_str::<BuildInfo>(&body).unwrap())
   }
 
   /// Enqueue a new build and return its associated queue url
@@ -111,7 +111,7 @@ impl<'a> JobsRef<'a> {
         "/api/json"
       )
     );
-    let parsed = json::decode::<Jobs>(&body).unwrap();
+    let parsed = serde_json::from_str::<Jobs>(&body).unwrap();
     Ok(parsed.jobs)
   }
 }

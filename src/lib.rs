@@ -1,12 +1,12 @@
 //! Bellhop attends to the needs of your jenkins installation
 
 extern crate hyper;
-extern crate rustc_serialize;
+extern crate serde;
+extern crate serde_json;
 
 use hyper::Client;
 use hyper::client::{IntoUrl, RequestBuilder, Response};
 use hyper::header::Location;
-use hyper::method::Method;
 use hyper::header::{Authorization, UserAgent};
 use std::io::{Read, Result};
 
